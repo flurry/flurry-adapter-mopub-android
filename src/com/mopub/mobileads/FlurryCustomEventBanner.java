@@ -1,21 +1,21 @@
 package com.mopub.mobileads;
 
-import java.util.Map;
-
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.widget.FrameLayout;
 
-import com.flurry.android.FlurryAdType;
-import com.flurry.android.FlurryAds;
-import com.flurry.android.FlurryAdSize;
-import com.flurry.android.FlurryAdListener;
+import com.flurry.android.ads.FlurryAdBanner;
+import com.flurry.android.ads.FlurryAdBannerListener;
+import com.flurry.android.ads.FlurryAdErrorType;
+
+import java.util.Map;
 
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
+import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 
-public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBanner implements FlurryAdListener {
+public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBanner {
     public static final String LOG_TAG = FlurryCustomEventBanner.class.getSimpleName();
 
     private static final String API_KEY = "apiKey";
@@ -27,6 +27,8 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
 
     private String mApiKey;
     private String mAdSpaceName;
+
+    private FlurryAdBanner mBanner;
 
     public FlurryCustomEventBanner() {
         super();
@@ -63,10 +65,11 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
         mAdSpaceName = serverExtras.get(AD_SPACE_NAME);
 
         FlurryAgentWrapper.getInstance().onStartSession(context, mApiKey);
-        FlurryAdListenerRouter.getInstance().register(mAdSpaceName, this);
 
         Log.d(LOG_TAG, "fetch Flurry Ad (" + mAdSpaceName + ") -- " + mLayout.toString());
-        FlurryAds.fetchAd(mContext, mAdSpaceName, mLayout, FlurryAdSize.BANNER_TOP);
+        mBanner = new FlurryAdBanner(mContext, mLayout, mAdSpaceName);
+        mBanner.setListener(new FlurryMopubBannerListener());
+        mBanner.fetchAd();
     }
 
     @Override
@@ -77,74 +80,16 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
 
         Log.d(LOG_TAG, "MoPub issued onInvalidate (" + mAdSpaceName + ")");
 
-        FlurryAds.removeAd(mContext, mAdSpaceName, mLayout);
+        if (mBanner != null) {
+            mBanner.destroy();
+            mBanner = null;
+        }
 
-        FlurryAdListenerRouter.getInstance().unregister(mAdSpaceName);
         FlurryAgentWrapper.getInstance().onEndSession(mContext);
 
         mContext = null;
         mListener = null;
         mLayout = null;
-    }
-
-    // FlurryAdListener
-    @Override
-    public void spaceDidFailToReceiveAd(String adSpace) {
-        Log.d(LOG_TAG, "Flurry space did fail to receive ad (" + adSpace + ")");
-        mListener.onBannerFailed(NETWORK_NO_FILL);
-    }
-
-    @Override
-    public void spaceDidReceiveAd(String adSpace) {
-        Log.d(LOG_TAG, "Flurry space did receive ad (" + adSpace + ")");
-        FlurryAds.displayAd(mContext, adSpace, mLayout);
-    }
-
-    @Override
-    public boolean shouldDisplayAd(String adSpace, FlurryAdType type) {
-        Log.d(LOG_TAG, "Flurry should display ad (" + adSpace + ")");
-        return true;
-    }
-
-    @Override
-    public void onAdClicked(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad clicked (" + adSpace + ")");
-        mListener.onBannerClicked();
-    }
-
-    @Override
-    public void onAdClosed(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad closed (" + adSpace + ")");
-        mListener.onBannerCollapsed();
-    }
-
-    @Override
-    public void onAdOpened(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad opened (" + adSpace + ")");
-        mListener.onBannerExpanded();
-    }
-
-    @Override
-    public void onApplicationExit(String adSpace) {
-        Log.d(LOG_TAG, "onApplicationExit (" + adSpace + ")");
-        mListener.onLeaveApplication();
-    }
-
-    @Override
-    public void onRendered(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad rendered (" + adSpace + ")");
-        mListener.onBannerLoaded(mLayout);
-    }
-
-    @Override
-    public void onRenderFailed(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad render failed (" + adSpace + ")");
-        mListener.onBannerFailed(NETWORK_NO_FILL);
-    }
-
-    @Override
-    public void onVideoCompleted(String adSpace) {
-        Log.d(LOG_TAG, "Flurry video completed (" + adSpace + ")");
     }
 
     private boolean extrasAreValid(Map<String, String> serverExtras) {
@@ -153,5 +98,83 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
         }
 
         return serverExtras.containsKey(API_KEY) && serverExtras.containsKey(AD_SPACE_NAME);
+    }
+
+    private class FlurryMopubBannerListener implements FlurryAdBannerListener {
+        private final String LOG_TAG = getClass().getSimpleName();
+
+        @Override
+        public void onFetched(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onFetched(" + adBanner.toString() + ")");
+
+            if (mBanner != null) {
+                mBanner.displayAd();
+            }
+        }
+
+        @Override
+        public void onRendered(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onRendered(" + adBanner.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onBannerLoaded(mLayout);
+            }
+        }
+
+        @Override
+        public void onShowFullscreen(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onShowFullscreen(" + adBanner.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onBannerExpanded();
+            }
+        }
+
+        @Override
+        public void onCloseFullscreen(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onCloseFullscreen(" + adBanner.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onBannerCollapsed();
+            }
+        }
+
+        @Override
+        public void onAppExit(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onAppExit(" + adBanner.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onLeaveApplication();
+            }
+        }
+
+        @Override
+        public void onClicked(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onClicked " + adBanner.toString());
+
+            if (mListener != null) {
+                mListener.onBannerClicked();
+            }
+        }
+
+        @Override
+        public void onVideoCompleted(FlurryAdBanner adBanner) {
+            Log.d(LOG_TAG, "onVideoCompleted " + adBanner.toString());
+            
+            // no-op
+        }
+
+        @Override
+        public void onError(FlurryAdBanner adBanner, FlurryAdErrorType adErrorType, int errorCode) {
+            Log.d(LOG_TAG, "onError(" + adBanner.toString() + adErrorType.toString() + errorCode + ")");
+
+            if (mListener != null) {
+                if (FlurryAdErrorType.FETCH.equals(adErrorType)) {
+                    mListener.onBannerFailed(NETWORK_NO_FILL);
+                } else if (FlurryAdErrorType.RENDER.equals(adErrorType)) {
+                    mListener.onBannerFailed(NETWORK_INVALID_STATE);               
+                }
+            }
+        }
     }
 }

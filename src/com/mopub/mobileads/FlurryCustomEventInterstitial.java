@@ -1,22 +1,20 @@
 package com.mopub.mobileads;
 
-import java.util.Map;
-
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
-import android.widget.FrameLayout;
 
-import com.flurry.android.FlurryAdType;
-import com.flurry.android.FlurryAds;
-import com.flurry.android.FlurryAdSize;
-import com.flurry.android.FlurryAdListener;
+import com.flurry.android.ads.FlurryAdErrorType;
+import com.flurry.android.ads.FlurryAdInterstitial;
+import com.flurry.android.ads.FlurryAdInterstitialListener;
+
+import java.util.Map;
 
 import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
-import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
+import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 
-public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEventInterstitial implements FlurryAdListener {
+public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEventInterstitial {
     public static final String LOG_TAG = FlurryCustomEventInterstitial.class.getSimpleName();
 
     private static final String API_KEY = "apiKey";
@@ -24,10 +22,11 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
 
     private Context mContext;
     private CustomEventInterstitialListener mListener;
-    private FrameLayout mLayout;
 
     private String mApiKey;
     private String mAdSpaceName;
+
+    private FlurryAdInterstitial mInterstitial;
 
     public FlurryCustomEventInterstitial() {
         super();
@@ -43,7 +42,7 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
         }
 
         if (listener == null) {
-            throw new IllegalArgumentException("CustomEventInterstitialListener cannot be null!");
+            throw new IllegalArgumentException("CustomEventBannerListener cannot be null!");
         }
 
         if (!(context instanceof Activity)) {
@@ -58,16 +57,16 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
 
         mContext = context;
         mListener = listener;
-        mLayout = new FrameLayout(context);
 
         mApiKey = serverExtras.get(API_KEY);
         mAdSpaceName = serverExtras.get(AD_SPACE_NAME);
 
         FlurryAgentWrapper.getInstance().onStartSession(context, mApiKey);
-        FlurryAdListenerRouter.getInstance().register(mAdSpaceName, this);
 
-        Log.d(LOG_TAG, "fetch Flurry ad (" + mAdSpaceName + ") -- " + mLayout.toString());
-        FlurryAds.fetchAd(mContext, mAdSpaceName, mLayout, FlurryAdSize.FULLSCREEN);
+        Log.d(LOG_TAG, "fetch Flurry ad (" + mAdSpaceName + ")");
+        mInterstitial = new FlurryAdInterstitial(mContext, mAdSpaceName);
+        mInterstitial.setListener(new FlurryMopubInterstitialListener());
+        mInterstitial.fetchAd();
     }
 
     @Override
@@ -78,79 +77,15 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
 
         Log.d(LOG_TAG, "MoPub issued onInvalidate (" + mAdSpaceName + ")");
 
-        FlurryAds.removeAd(mContext, mAdSpaceName, mLayout);
+        if (mInterstitial != null) {
+            mInterstitial.destroy();
+            mInterstitial = null;
+        }
 
-        FlurryAdListenerRouter.getInstance().unregister(mAdSpaceName);
         FlurryAgentWrapper.getInstance().onEndSession(mContext);
 
         mContext = null;
         mListener = null;
-        mLayout = null;
-    }
-
-    // FlurryAdListener
-    @Override
-    protected void showInterstitial() {
-        FlurryAds.displayAd(mContext, mAdSpaceName, mLayout);
-    }
-
-    //FlurryAdListener callbacks
-    @Override
-    public void spaceDidReceiveAd(String adSpace) {
-        Log.d(LOG_TAG, "Flurry space did receive ad (" + adSpace + ")");
-        mListener.onInterstitialLoaded();
-    }
-
-    @Override
-    public void onAdClicked(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad clicked (" + adSpace + ")");
-        mListener.onInterstitialClicked();
-    }
-
-    @Override
-    public void onAdClosed(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad closed (" + adSpace + ")");
-        mListener.onInterstitialDismissed();
-    }
-
-    @Override
-    public void onAdOpened(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad opened (" + adSpace + ")");
-    }
-
-    @Override
-    public void onApplicationExit(String adSpace) {
-        Log.d(LOG_TAG, "onApplicationExit (" + adSpace + ")");
-        mListener.onLeaveApplication();
-    }
-
-    @Override
-    public void onRendered(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad rendered (" + adSpace + ")");
-        mListener.onInterstitialShown();
-    }
-
-    @Override
-    public void onRenderFailed(String adSpace) {
-        Log.d(LOG_TAG, "Flurry ad render failed (" + adSpace + ")");
-        mListener.onInterstitialFailed(NETWORK_INVALID_STATE);
-    }
-
-    @Override
-    public void onVideoCompleted(String adSpace) {
-        Log.d(LOG_TAG, "Flurry video completed (" + adSpace + ")");
-    }
-
-    @Override
-    public boolean shouldDisplayAd(String adSpace, FlurryAdType adType) {
-        Log.d(LOG_TAG, "Flurry should display ad (" + adSpace + ")");
-        return true;
-    }
-
-    @Override
-    public void spaceDidFailToReceiveAd(String adSpace) {
-        Log.d(LOG_TAG, "Flurry space did fail to receive ad (" + adSpace + ")");
-        mListener.onInterstitialFailed(NETWORK_NO_FILL);
     }
 
     private boolean extrasAreValid(Map<String, String> serverExtras) {
@@ -159,5 +94,90 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
         }
 
         return serverExtras.containsKey(API_KEY) && serverExtras.containsKey(AD_SPACE_NAME);
+    }
+
+    // FlurryAdListener
+    @Override
+    protected void showInterstitial() {
+
+        if (mInterstitial != null) {
+            mInterstitial.displayAd();
+        }
+    }
+
+    private class FlurryMopubInterstitialListener implements FlurryAdInterstitialListener {
+        private final String LOG_TAG = getClass().getSimpleName();
+
+        @Override
+        public void onFetched(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onFetched(" + adInterstitial.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onInterstitialLoaded();
+            }
+        }
+
+        @Override
+        public void onRendered(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onRendered(" + adInterstitial.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onInterstitialShown();
+            }
+        }
+
+        @Override
+        public void onDisplay(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onDisplay(" + adInterstitial.toString() + ")");
+
+            // no-op
+        }
+
+        @Override
+        public void onClose(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onClose(" + adInterstitial.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onInterstitialDismissed();
+            }
+        }
+
+        @Override
+        public void onAppExit(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onAppExit(" + adInterstitial.toString() + ")");
+
+            if (mListener != null) {
+                mListener.onLeaveApplication();
+            }
+        }
+
+        @Override
+        public void onClicked(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onClicked " + adInterstitial.toString());
+
+            if (mListener != null) {
+                mListener.onInterstitialClicked();
+            }
+        }
+
+        @Override
+        public void onVideoCompleted(FlurryAdInterstitial adInterstitial) {
+            Log.d(LOG_TAG, "onVideoCompleted " + adInterstitial.toString());
+
+            // no-op
+        }
+
+        @Override
+        public void onError(FlurryAdInterstitial adBanner, FlurryAdErrorType adErrorType, int errorCode) {
+            Log.d(LOG_TAG, "onError(" + adBanner.toString() + adErrorType.toString() + errorCode + ")");
+
+            if (mListener != null) {
+                if (FlurryAdErrorType.FETCH.equals(adErrorType)) {
+                    mListener.onInterstitialFailed(NETWORK_NO_FILL);
+                } else if (FlurryAdErrorType.RENDER.equals(adErrorType)) {
+                    mListener.onInterstitialFailed(NETWORK_INVALID_STATE);
+                }
+            }
+        }
     }
 }
