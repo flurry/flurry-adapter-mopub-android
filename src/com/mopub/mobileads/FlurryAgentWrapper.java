@@ -9,7 +9,7 @@ import com.flurry.android.FlurryAgent;
 
 import java.util.WeakHashMap;
 
-final class FlurryAgentWrapper {
+public final class FlurryAgentWrapper {
     private static FlurryAgentWrapper sWrapper;
 
     public static synchronized FlurryAgentWrapper getInstance() {
@@ -20,12 +20,12 @@ final class FlurryAgentWrapper {
         return sWrapper;
     }
 
-    private final WeakHashMap<Context, Boolean> mContextMap = new WeakHashMap<Context, Boolean>();
+    private final WeakHashMap<Context, Integer> mContextMap = new WeakHashMap<>();
 
     private FlurryAgentWrapper() {
         FlurryAgent.setLogEnabled(false);
         FlurryAgent.setLogLevel(Log.INFO);
-        FlurryAgent.addOrigin("Flurry_Mopub_Android", "5.0.0.r1");
+        FlurryAgent.addOrigin("Flurry_Mopub_Android", "5.1.0.r1");
     }
 
     public synchronized void onStartSession(Context context, String apiKey) {
@@ -42,14 +42,14 @@ final class FlurryAgentWrapper {
             return;
         }
 
-        // only allow one start/end session cycle per context
         if (mContextMap.get(context) != null) {
-            return;
+            int refCount = mContextMap.get(context);
+            mContextMap.put(context, ++refCount);
         }
-        mContextMap.put(context, true);
-
-
-        FlurryAgent.onStartSession(context);
+        else{
+            mContextMap.put(context, 1);
+            FlurryAgent.onStartSession(context);
+        }
     }
 
     public synchronized void onEndSession(Context context) {
@@ -63,13 +63,20 @@ final class FlurryAgentWrapper {
             return;
         }
 
-        // only allow one start/end session cycle per context
-        if (mContextMap.get(context) == null) {
+        if(mContextMap.get(context) == null){
             return;
         }
-        mContextMap.remove(context);
-
-        FlurryAgent.onEndSession(context);
+        else{
+            int refCount = mContextMap.get(context);
+            if(--refCount == 0){
+                mContextMap.remove(context);
+                FlurryAgent.onEndSession(context);
+                return;
+            }
+            else {
+                mContextMap.put(context, refCount);
+            }
+        }
     }
 }
 
