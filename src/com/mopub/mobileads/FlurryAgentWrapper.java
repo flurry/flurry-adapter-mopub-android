@@ -9,6 +9,12 @@ import com.flurry.android.FlurryAgent;
 
 import java.util.WeakHashMap;
 
+/**
+ * PLEASE NOTE:
+ *
+ * This class is not required for Flurry Analytics users.
+ * It may safely be deleted for apps that already integrate Analytics.
+ */
 public final class FlurryAgentWrapper {
     private static FlurryAgentWrapper sWrapper;
 
@@ -25,7 +31,7 @@ public final class FlurryAgentWrapper {
     private FlurryAgentWrapper() {
         FlurryAgent.setLogEnabled(false);
         FlurryAgent.setLogLevel(Log.INFO);
-        FlurryAgent.addOrigin("Flurry_Mopub_Android", "5.1.0.r1");
+        FlurryAgent.addOrigin("Flurry_Mopub_Android", "5.4.0.r1");
     }
 
     public synchronized void onStartSession(Context context, String apiKey) {

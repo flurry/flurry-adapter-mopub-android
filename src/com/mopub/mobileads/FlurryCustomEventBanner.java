@@ -40,14 +40,19 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
                               CustomEventBannerListener listener,
                               Map<String, Object> localExtras, Map<String, String> serverExtras) {
         if (context == null) {
-            throw new IllegalArgumentException("Context cannot be null!");
+            Log.e(LOG_TAG, "Context cannot be null.");
+            listener.onBannerFailed(ADAPTER_CONFIGURATION_ERROR);
+            return;
         }
 
         if (listener == null) {
-            throw new IllegalArgumentException("CustomEventBannerListener cannot be null!");
+            Log.e(LOG_TAG, "CustomEventBannerListener cannot be null.");
+            listener.onBannerFailed(ADAPTER_CONFIGURATION_ERROR);
+            return;
         }
 
         if (!(context instanceof Activity)) {
+            Log.e(LOG_TAG, "Ad can be rendered only in Activity context.");
             listener.onBannerFailed(ADAPTER_CONFIGURATION_ERROR);
             return;
         }
@@ -64,6 +69,7 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
         mApiKey = serverExtras.get(API_KEY);
         mAdSpaceName = serverExtras.get(AD_SPACE_NAME);
 
+        // Not needed for Flurry Analytics users
         FlurryAgentWrapper.getInstance().onStartSession(context, mApiKey);
 
         Log.d(LOG_TAG, "fetch Flurry Ad (" + mAdSpaceName + ") -- " + mLayout.toString());
@@ -85,6 +91,7 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
             mBanner = null;
         }
 
+        // Not needed for Flurry Analytics users
         FlurryAgentWrapper.getInstance().onEndSession(mContext);
 
         mContext = null;
@@ -100,6 +107,7 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
         return serverExtras.containsKey(API_KEY) && serverExtras.containsKey(AD_SPACE_NAME);
     }
 
+    // FlurryAdListener
     private class FlurryMopubBannerListener implements FlurryAdBannerListener {
         private final String LOG_TAG = getClass().getSimpleName();
 

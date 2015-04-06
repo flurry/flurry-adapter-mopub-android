@@ -38,14 +38,19 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
                                     CustomEventInterstitialListener listener,
                                     Map<String, Object> localExtras, Map<String, String> serverExtras) {
         if (context == null) {
-            throw new IllegalArgumentException("Context cannot be null!");
+            Log.e(LOG_TAG, "Context cannot be null.");
+            listener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
+            return;
         }
 
         if (listener == null) {
-            throw new IllegalArgumentException("CustomEventBannerListener cannot be null!");
+            Log.e(LOG_TAG, "CustomEventInterstitialListener cannot be null.");
+            listener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
+            return;
         }
 
         if (!(context instanceof Activity)) {
+            Log.e(LOG_TAG, "Ad can be rendered only in Activity context.");
             listener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
             return;
         }
@@ -61,6 +66,7 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
         mApiKey = serverExtras.get(API_KEY);
         mAdSpaceName = serverExtras.get(AD_SPACE_NAME);
 
+        // Not needed for Flurry Analytics users
         FlurryAgentWrapper.getInstance().onStartSession(context, mApiKey);
 
         Log.d(LOG_TAG, "fetch Flurry ad (" + mAdSpaceName + ")");
@@ -82,6 +88,7 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
             mInterstitial = null;
         }
 
+        // Not needed for Flurry Analytics users
         FlurryAgentWrapper.getInstance().onEndSession(mContext);
 
         mContext = null;
@@ -96,15 +103,16 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
         return serverExtras.containsKey(API_KEY) && serverExtras.containsKey(AD_SPACE_NAME);
     }
 
-    // FlurryAdListener
     @Override
     protected void showInterstitial() {
+        Log.d(LOG_TAG, "MoPub issued showInterstitial (" + mAdSpaceName + ")");
 
         if (mInterstitial != null) {
             mInterstitial.displayAd();
         }
     }
 
+    // FlurryAdListener
     private class FlurryMopubInterstitialListener implements FlurryAdInterstitialListener {
         private final String LOG_TAG = getClass().getSimpleName();
 
