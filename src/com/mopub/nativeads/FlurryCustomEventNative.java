@@ -64,7 +64,7 @@ public class FlurryCustomEventNative extends CustomEventNative {
     private boolean validateExtras(final Map<String, String> serverExtras) {
         final String flurryApiKey = serverExtras.get(FLURRY_APIKEY);
         final String flurryAdSpace = serverExtras.get(FLURRY_ADSPACE);
-        Log.i(kLogTag, "ServerInfo fetched from Mopub " + FLURRY_APIKEY + " : " + flurryApiKey + " and " + FLURRY_ADSPACE + " :" + flurryAdSpace);
+        Log.i(kLogTag, "ServerInfo fetched from Mopub " + FLURRY_APIKEY + " : " + flurryApiKey + " and " + FLURRY_ADSPACE + " : " + flurryAdSpace);
         return ((flurryApiKey != null && flurryApiKey.length() > 0) && (flurryAdSpace != null && flurryAdSpace.length() > 0));
     }
 
