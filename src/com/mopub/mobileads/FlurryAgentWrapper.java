@@ -12,10 +12,8 @@ import java.util.WeakHashMap;
 /**
  * PLEASE NOTE:
  *
- * This class is not required for Flurry Analytics users and may safely be deleted
- * for apps that already integrate Analytics. However, if removing this file, please
- * add FlurryAgent.addOrigin("Flurry_Mopub_Android", "5.4.0.r1") before calling
- * {@link FlurryAgent.init(Context, String)} in your code.
+ * This class is not required for Flurry Analytics users.
+ * It may safely be deleted for apps that already integrate Analytics.
  */
 public final class FlurryAgentWrapper {
     private static FlurryAgentWrapper sWrapper;
@@ -33,7 +31,7 @@ public final class FlurryAgentWrapper {
     private FlurryAgentWrapper() {
         FlurryAgent.setLogEnabled(false);
         FlurryAgent.setLogLevel(Log.INFO);
-        FlurryAgent.addOrigin("Flurry_Mopub_Android", "5.4.0.r1");
+        FlurryAgent.addOrigin("Flurry_Mopub_Android", "6.1.0");
     }
 
     public synchronized void onStartSession(Context context, String apiKey) {
@@ -54,7 +52,7 @@ public final class FlurryAgentWrapper {
             int refCount = mContextMap.get(context);
             mContextMap.put(context, ++refCount);
         }
-        else{
+        else {
             mContextMap.put(context, 1);
             FlurryAgent.onStartSession(context);
         }
@@ -71,15 +69,11 @@ public final class FlurryAgentWrapper {
             return;
         }
 
-        if(mContextMap.get(context) == null){
-            return;
-        }
-        else{
+        if (mContextMap.get(context) != null) {
             int refCount = mContextMap.get(context);
-            if(--refCount == 0){
+            if (--refCount == 0) {
                 mContextMap.remove(context);
                 FlurryAgent.onEndSession(context);
-                return;
             }
             else {
                 mContextMap.put(context, refCount);
