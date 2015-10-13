@@ -15,22 +15,24 @@ import com.mopub.mobileads.FlurryAgentWrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlurryForwardingNativeAd extends BaseForwardingNativeAd {
+import static com.mopub.nativeads.NativeImageHelper.preCacheImages;
 
-    private static final String kLogTag = FlurryForwardingNativeAd.class.getSimpleName();
+public class FlurryStaticNativeAd extends StaticNativeAd {
+
+    private static final String kLogTag = FlurryStaticNativeAd.class.getSimpleName();
     private static final int IMPRESSION_VIEW_MIN_TIME = 1000;
 
     private final Context mContext;
     private final CustomEventNative.CustomEventNativeListener mCustomEventNativeListener;
-    private final FlurryForwardingNativeAd mFlurryForwardingNativeAd;
+    private final FlurryStaticNativeAd mFlurryStaticNativeAd;
 
     private FlurryAdNative nativeAd;
 
-    FlurryForwardingNativeAd(Context context, FlurryAdNative adNative, CustomEventNative.CustomEventNativeListener mCustomEventNativeListener) {
+    FlurryStaticNativeAd(Context context, FlurryAdNative adNative, CustomEventNative.CustomEventNativeListener mCustomEventNativeListener) {
         this.mContext = context;
         this.nativeAd = adNative;
         this.mCustomEventNativeListener = mCustomEventNativeListener;
-        this.mFlurryForwardingNativeAd = this;
+        this.mFlurryStaticNativeAd = this;
     }
 
     public synchronized void fetchAd() {
@@ -46,13 +48,13 @@ public class FlurryForwardingNativeAd extends BaseForwardingNativeAd {
 
     private synchronized void onFetched(FlurryAdNative adNative) {
         if (adNative != null) {
-            Log.d(kLogTag, "FlurryForwardingNativeAd onFetched: Native Ad fetched successfully! "+ adNative.toString());
+            Log.d(kLogTag, "FlurryStaticNativeAd onFetched: Native Ad fetched successfully! "+ adNative.toString());
             setupNativeAd(adNative);
         }
     }
 
     private synchronized void onFetchFailed(FlurryAdNative adNative) {
-        Log.d(kLogTag, "FlurryForwardingNativeAd onFetchFailed: Native ad not available. " + adNative.toString());
+        Log.d(kLogTag, "FlurryStaticNativeAd onFetchFailed: Native ad not available. " + adNative.toString());
         if (mCustomEventNativeListener != null) {
             mCustomEventNativeListener.onNativeAdFailed(NativeErrorCode.NETWORK_NO_FILL);
         }
@@ -76,19 +78,17 @@ public class FlurryForwardingNativeAd extends BaseForwardingNativeAd {
 
             //setCallToAction(CALL_TO_ACTION);
             setImpressionMinTimeViewed(IMPRESSION_VIEW_MIN_TIME);
-            setOverridingClickTracker(true);
-            setOverridingImpressionTracker(true);
 
             if (getImageUrls() == null || getImageUrls().isEmpty()) {
                 Log.d(kLogTag, "preCacheImages: No images to cache. Flurry Ad Native: " + nativeAd.toString());
-                mCustomEventNativeListener.onNativeAdLoaded(mFlurryForwardingNativeAd);
+                mCustomEventNativeListener.onNativeAdLoaded(mFlurryStaticNativeAd);
             } else {
-                preCacheImages(mContext, getImageUrls(), new CustomEventNative.ImageListener() {
+                preCacheImages(mContext, getImageUrls(), new NativeImageHelper.ImageListener() {
                     @Override
                     public void onImagesCached() {
                         if (mCustomEventNativeListener != null) {
                             Log.d(kLogTag, "preCacheImages: Ad image cached.");
-                            mCustomEventNativeListener.onNativeAdLoaded(mFlurryForwardingNativeAd);
+                            mCustomEventNativeListener.onNativeAdLoaded(mFlurryStaticNativeAd);
                         }
                         else{
                             Log.d(kLogTag, "Unable to notify cache failure: CustomEventNativeListener is null.");
@@ -159,14 +159,14 @@ public class FlurryForwardingNativeAd extends BaseForwardingNativeAd {
         @Override
         public void onFetched(FlurryAdNative adNative) {
             Log.d(kLogTag, "onFetched(" +adNative.toString() + ") Successful.");
-            mFlurryForwardingNativeAd.onFetched(adNative);
+            mFlurryStaticNativeAd.onFetched(adNative);
         }
 
         @Override
         public void onError(FlurryAdNative adNative, FlurryAdErrorType adErrorType, int errorCode) {
             if (adErrorType.equals(FlurryAdErrorType.FETCH)) {
                 Log.d(kLogTag, "onError(" + adNative.toString() + ", " + adErrorType.toString() +","+ errorCode + ")");
-                mFlurryForwardingNativeAd.onFetchFailed(adNative);
+                mFlurryStaticNativeAd.onFetchFailed(adNative);
             }
         }
 
