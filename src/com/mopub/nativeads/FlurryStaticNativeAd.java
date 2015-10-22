@@ -16,15 +16,15 @@ import com.mopub.mobileads.FlurryAgentWrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlurryStaticNative extends StaticNativeAd {
+public class FlurryStaticNativeAd extends StaticNativeAd {
 
-    private static final String kLogTag = FlurryStaticNative.class.getSimpleName();
+    private static final String kLogTag = FlurryStaticNativeAd.class.getSimpleName();
     private static final int IMPRESSION_VIEW_MIN_TIME = 1000;
     private static final String CALL_TO_ACTION = "callToAction";
 
     private final Context mContext;
     private final CustomEventNative.CustomEventNativeListener mCustomEventNativeListener;
-    private final FlurryStaticNative mFlurryStaticNative;
+    private final FlurryStaticNativeAd mFlurryStaticNativeAd;
 
     private static final String ASSET_SEC_HQ_IMAGE = "secHqImage";
     private static final String ASSET_SEC_IMAGE = "secImage";
@@ -41,12 +41,12 @@ public class FlurryStaticNative extends StaticNativeAd {
 
     private FlurryAdNative nativeAd;
 
-    FlurryStaticNative(Context context, FlurryAdNative adNative,
-                       CustomEventNative.CustomEventNativeListener mCustomEventNativeListener) {
+    FlurryStaticNativeAd(Context context, FlurryAdNative adNative,
+                         CustomEventNative.CustomEventNativeListener mCustomEventNativeListener) {
         this.mContext = context;
         this.nativeAd = adNative;
         this.mCustomEventNativeListener = mCustomEventNativeListener;
-        this.mFlurryStaticNative = this;
+        this.mFlurryStaticNativeAd = this;
     }
 
     public synchronized void fetchAd() {
@@ -123,14 +123,14 @@ public class FlurryStaticNative extends StaticNativeAd {
 
             if (getImageUrls() == null || getImageUrls().isEmpty()) {
                 Log.d(kLogTag, "preCacheImages: No images to cache. Flurry Ad Native: " + nativeAd.toString());
-                mCustomEventNativeListener.onNativeAdLoaded(mFlurryStaticNative);
+                mCustomEventNativeListener.onNativeAdLoaded(mFlurryStaticNativeAd);
             } else {
                 NativeImageHelper.preCacheImages(mContext, getImageUrls(), new NativeImageHelper.ImageListener() {
                     @Override
                     public void onImagesCached() {
                         if (mCustomEventNativeListener != null) {
                             Log.d(kLogTag, "preCacheImages: Ad image cached.");
-                            mCustomEventNativeListener.onNativeAdLoaded(mFlurryStaticNative);
+                            mCustomEventNativeListener.onNativeAdLoaded(mFlurryStaticNativeAd);
                         } else {
                             Log.d(kLogTag, "Unable to notify cache failure: CustomEventNativeListener is null.");
                         }
@@ -220,14 +220,14 @@ public class FlurryStaticNative extends StaticNativeAd {
         @Override
         public void onFetched(FlurryAdNative adNative) {
             Log.d(kLogTag, "onFetched(" +adNative.toString() + ") Successful.");
-            mFlurryStaticNative.onFetched(adNative);
+            mFlurryStaticNativeAd.onFetched(adNative);
         }
 
         @Override
         public void onError(FlurryAdNative adNative, FlurryAdErrorType adErrorType, int errorCode) {
             if (adErrorType.equals(FlurryAdErrorType.FETCH)) {
                 Log.d(kLogTag, "onError(" + adNative.toString() + ", " + adErrorType.toString() +","+ errorCode + ")");
-                mFlurryStaticNative.onFetchFailed(adNative);
+                mFlurryStaticNativeAd.onFetchFailed(adNative);
             }
         }
 
@@ -259,4 +259,3 @@ public class FlurryStaticNative extends StaticNativeAd {
         }
     };
 }
-
