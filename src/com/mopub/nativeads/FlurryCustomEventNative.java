@@ -37,10 +37,10 @@ public class FlurryCustomEventNative extends CustomEventNative {
             return;
         }
 
-        final FlurryStaticNative mflurryStaticNative =
-                new FlurryStaticNative(context,
+        final FlurryStaticNativeAd mflurryStaticNativeAd =
+                new FlurryStaticNativeAd(context,
                         new FlurryAdNative(context, flurryAdSpace), customEventNativeListener);
-        mflurryStaticNative.fetchAd();
+        mflurryStaticNativeAd.fetchAd();
     }
 
     private boolean validateExtras(final Map<String, String> serverExtras) {
