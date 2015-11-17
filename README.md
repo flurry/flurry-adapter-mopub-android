@@ -4,8 +4,9 @@ Flurry Android Adapter for MoPub
 Adapter version 6.1.0 - Updated 2015-10-12
 ------------------------------------------
 
-This version of the adapter works with MoPub Android SDK 4+. If using older versions of the MoPub SDK, please refer to
-[version 5.4.0](https://github.com/flurry/FlurryAdapterForMoPubAndroid/tree/v5.4.0_for_mopub_pre_4.0.0) of the adapter.
+This version of the adapter works with MoPub Android SDK 4.1+ and Flurry Android SDK 6.2+. If using older versions of **both**
+the MoPub and Flurry SDK, please refer to [version 5.4.0](https://github.com/flurry/FlurryAdapterForMoPubAndroid/tree/v5.4.0_for_mopub_pre_4.0.0) of the adapter. 
+Otherwise, please upgrade to the newer versions of both SDK.
 
 ###  Mediate Flurry Ads through MoPub
 

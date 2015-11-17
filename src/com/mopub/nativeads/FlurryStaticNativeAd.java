@@ -62,7 +62,7 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
 
     private synchronized void onFetched(FlurryAdNative adNative) {
         if (adNative != null) {
-            Log.d(kLogTag, "FlurryForwardingNativeAd onFetched: Native Ad fetched successfully! "
+            Log.d(kLogTag, "FlurryForwardingNativeAd onFetched: Native Ad fetched successfully!"
                     + adNative.toString());
             setupNativeAd(adNative);
         }
@@ -256,6 +256,16 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
         @Override
         public void onAppExit(FlurryAdNative adNative) {
             Log.d(kLogTag, "onAppExit(" + adNative.toString() + ")");
+        }
+	
+        @Override
+        public void onCollapsed(FlurryAdNative adNative) {
+            Log.d(kLogTag, "onCollapsed(" + adNative.toString() + ")");
+        }
+
+        @Override
+        public void onExpanded(FlurryAdNative adNative) {
+            Log.d(kLogTag, "onExpanded(" + adNative.toString() + ")");
         }
     };
 }
