@@ -62,14 +62,14 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
 
     private synchronized void onFetched(FlurryAdNative adNative) {
         if (adNative != null) {
-            Log.d(kLogTag, "FlurryForwardingNativeAd onFetched: Native Ad fetched successfully!"
+            Log.d(kLogTag, "onFetched: Native Ad fetched successfully!"
                     + adNative.toString());
             setupNativeAd(adNative);
         }
     }
 
     private synchronized void onFetchFailed(FlurryAdNative adNative) {
-        Log.d(kLogTag, "FlurryForwardingNativeAd onFetchFailed: Native ad not available. "
+        Log.d(kLogTag, "onFetchFailed: Native ad not available. "
                 + adNative.toString());
         if (mCustomEventNativeListener != null) {
             mCustomEventNativeListener.onNativeAdFailed(NativeErrorCode.NETWORK_NO_FILL);
