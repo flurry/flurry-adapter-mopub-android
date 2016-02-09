@@ -1,12 +1,12 @@
 Flurry Android Adapter for MoPub
 =================================
 
-Adapter version 6.1.0 - Updated 2015-10-12
+Adapter version 6.2.0 - Updated 2016-03-03
 ------------------------------------------
 
 This version of the adapter works with MoPub Android SDK 4.1+ and Flurry Android SDK 6.2+. If using older versions of **both**
 the MoPub and Flurry SDK, please refer to [version 5.4.0](https://github.com/flurry/FlurryAdapterForMoPubAndroid/tree/v5.4.0_for_mopub_pre_4.0.0) of the adapter. 
-Otherwise, please upgrade to the newer versions of both SDK.
+Otherwise, please upgrade to the newer versions of both SDKs.
 
 ###  Mediate Flurry Ads through MoPub
 
@@ -104,7 +104,7 @@ to the **Publishers** tab. On the lefthand navigation bar select **Inventory** a
 ![Screenshot showing ad space navigation on Flurry dev portal](imgs/ad_space_navigation.png)
 
 With **Ad Spaces** selected you’ll see an index of previously created ad spaces. To set up a new one,
-Click on the **New Ad Space** button on the top right. The Ad Space setup screen has four modules.
+click on the **New Ad Space** button on the top right. The Ad Space setup screen has four modules.
 
 The Basic Setup section includes fields required to define the name, application, dimensions,
 placement and orientation of the ad space.
@@ -122,20 +122,27 @@ com.mopub.nativeads package (added to your project in the previous step).
 Flurry's custom events are implemented in accordance with [instructions provided by MoPub]( https://github.com/mopub/mopub-android-sdk/wiki/Custom-Events).
 
 After you incorporate the Flurry files into your project, you need to
-configure Flurry as the Custom Native Network into your mediation flow. Please follow instructions provided by MoPub 
+configure Flurry as a Custom Network. Please follow instructions provided by MoPub 
 (for [banner, interstitial](https://dev.twitter.com/mopub/ui-setup/custom-network-setup) or [native](https://dev.twitter.com/mopub/ui-setup/network-setup-custom-native)) 
 with any of the Flurry custom events class noted below:
 
 * [`com.mopub.mobileads.FlurryCustomEventBanner`](src/com/mopub/mobileads/FlurryCustomEventBanner.java)
- for Banner Ads
+ for banner ads
 * [`com.mopub.mobileads.FlurryCustomEventInterstitial`](src/com/mopub/mobileads/FlurryCustomEventInterstitial.java)
-  for Interstitial Ads
+  for interstitial ads
 * [`com.mopub.nativeads.FlurryCustomEventNative`](src/com/mopub/nativeads/FlurryCustomEventNative.java)
- for Flurry Native Ads
+ for Flurry native ads
 
-An important step to get this integration working is to configure a line item or segment on MoPub, setup
-Flurry API key and Flurry Ad Space (as described above) and send them as server extras
-(Custom Event class Data) for the mediation to work.
+**NOTE:** An important step to get this integration working is to configure the custom network (as described above) with the
+Flurry API key and Flurry Ad Space and send them as server extras (in the "Custom Event Class Data" field on the MoPub UI).
+
+The custom event class data should be in the following JSON format:
+
+```json
+{"apiKey":"YOUR_API_KEY","adSpaceName":"AdSpaceName"}
+```
+
+You can also configure the custom event data as a line item in your MoPub order.
 
 ![Screenshot showing ad unit/line item config on MoPub's dashboard](imgs/mopub_line_item_config.png)
 
@@ -151,10 +158,15 @@ and for more info on monetizing you app through Flurry see
 
 Changelog
 ---------
+#### Version 6.2.0 - 2016-03-03
+* Added Flurry ad branding logo as a MoPub extra
 
-##### Version 5.4.0.r1 - 04/05/2015
+#### Version 6.1.0 - 2015-10-12
+* Added support for MoPub 4.0.0
+
+##### Version 5.4.0.r1 - 2015-04-05
 * Flurry Native Ad usage in Listview has the entire ad clickable.
 * Allow Flurry Native Ad without any image.
 
-##### Version 5.1.0.r1 - 02/02/2015
+##### Version 5.1.0.r1 - 2015-02-02
 * Introduced Flurry Native Ad support in the adapter

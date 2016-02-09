@@ -29,6 +29,7 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
     private static final String ASSET_SEC_HQ_IMAGE = "secHqImage";
     private static final String ASSET_SEC_IMAGE = "secImage";
     private static final String ASSET_SEC_HQ_RATING_IMG = "secHqRatingImg";
+    private static final String ASSET_SEC_HQ_BRANDING_LOGO = "secHqBrandingLogo";
     private static final String ASSET_SEC_RATING_IMG = "secRatingImg";
     private static final String ASSET_APP_RATING = "appRating";
     private static final String ASSET_APP_CATEGORY = "appCategory";
@@ -36,8 +37,9 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
     private static final String ASSET_SUMMARY = "summary";
     private static final double MOPUB_STAR_RATING_SCALE = StaticNativeAd.MAX_STAR_RATING;
 
-    public static final String EXTRA_STAR_RATING_IMG = "starratingimage";
-    public static final String EXTRA_APP_CATEGORY = "appcategory";
+    public static final String EXTRA_STAR_RATING_IMG = "flurry_starratingimage";
+    public static final String EXTRA_APP_CATEGORY = "flurry_appcategorytext";
+    public static final String EXTRA_SEC_BRANDING_LOGO = "flurry_brandingimage";
 
     private FlurryAdNative nativeAd;
 
@@ -91,6 +93,7 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
 
             setTitle(nativeAd.getAsset(ASSET_HEADLINE).getValue());
             setText(nativeAd.getAsset(ASSET_SUMMARY).getValue());
+            addExtra(EXTRA_SEC_BRANDING_LOGO, nativeAd.getAsset(ASSET_SEC_HQ_BRANDING_LOGO).getValue());
 
             if(isAppInstallAd()) {
                 // App rating image URL may be null
@@ -257,7 +260,7 @@ public class FlurryStaticNativeAd extends StaticNativeAd {
         public void onAppExit(FlurryAdNative adNative) {
             Log.d(kLogTag, "onAppExit(" + adNative.toString() + ")");
         }
-	
+
         @Override
         public void onCollapsed(FlurryAdNative adNative) {
             Log.d(kLogTag, "onCollapsed(" + adNative.toString() + ")");
