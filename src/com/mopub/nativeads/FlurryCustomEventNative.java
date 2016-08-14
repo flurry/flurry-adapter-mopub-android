@@ -30,7 +30,7 @@ public class FlurryCustomEventNative extends CustomEventNative {
             flurryAdSpace = serverExtras.get(FLURRY_ADSPACE);
 
             // Not needed for Flurry Analytics users
-            FlurryAgentWrapper.getInstance().onStartSession(activity, flurryApiKey);
+            FlurryAgentWrapper.getInstance().onStartSession(context, flurryApiKey);
         } else {
             customEventNativeListener.onNativeAdFailed(NativeErrorCode.NATIVE_ADAPTER_CONFIGURATION_ERROR);
             Log.i(kLogTag, "Failed Native AdFetch: Missing required server extras [FLURRY_APIKEY and/or FLURRY_ADSPACE].");
