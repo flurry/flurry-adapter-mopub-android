@@ -2,23 +2,23 @@ package com.mopub.mobileads;
 
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.flurry.android.FlurryAgent;
+import com.flurry.android.FlurryAgentListener;
 
-import java.util.WeakHashMap;
-
-/**
- * PLEASE NOTE:
- *
- * This class is not required for Flurry Analytics users and may safely be deleted
- * for apps that already integrate Analytics. However, if removing this file, please
- * add FlurryAgent.addOrigin("Flurry_Mopub_Android", "6.2.0") before calling
- * {@link FlurryAgent#init(Context, String)} in your code.
- */
 public final class FlurryAgentWrapper {
+    public static final String PARAM_API_KEY = "apiKey";
+    public static final String PARAM_AD_SPACE_NAME = "adSpaceName";
+
+    private static final String ORIGIN_IDENTIFIER = "Flurry_Mopub_Android";
+    private static final String ORIGIN_VERSION = "6.5.0";
     private static FlurryAgentWrapper sWrapper;
+
+    private FlurryAgent.Builder mAgentBuilder;
 
     public static synchronized FlurryAgentWrapper getInstance() {
         if (sWrapper == null) {
@@ -28,59 +28,54 @@ public final class FlurryAgentWrapper {
         return sWrapper;
     }
 
-    private final WeakHashMap<Context, Integer> mContextMap = new WeakHashMap<>();
-
     private FlurryAgentWrapper() {
-        FlurryAgent.setLogEnabled(false);
-        FlurryAgent.setLogLevel(Log.INFO);
-        FlurryAgent.addOrigin("Flurry_Mopub_Android", "6.2.0");
+        mAgentBuilder = new FlurryAgent.Builder()
+                .withLogEnabled(false)
+                .withLogLevel(Log.INFO);
+
+        FlurryAgent.addOrigin(ORIGIN_IDENTIFIER, ORIGIN_VERSION);
     }
 
-    public synchronized void onStartSession(Context context, String apiKey) {
+    public synchronized void startSession(@NonNull final Context context,
+                                          final String apiKey,
+                                          @Nullable FlurryAgentListener flurryAgentListener) {
         // validate parameters
-        if (context == null || TextUtils.isEmpty(apiKey)) {
+        if (TextUtils.isEmpty(apiKey)) {
             return;
         }
 
         // init
-        FlurryAgent.init(context, apiKey);
+        if (!FlurryAgent.isSessionActive()) {
+            mAgentBuilder.withListener(flurryAgentListener) // withListener allows nulls
+                    .build(context, apiKey);
 
-        // sessions are automatic on ICS+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            return;
-        }
+            // sessions are automatic on ICS+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                return;
+            }
 
-        if (mContextMap.get(context) != null) {
-            int refCount = mContextMap.get(context);
-            mContextMap.put(context, ++refCount);
-        }
-        else {
-            mContextMap.put(context, 1);
             FlurryAgent.onStartSession(context);
         }
     }
 
-    public synchronized void onEndSession(Context context) {
+    public synchronized void endSession(final Context context) {
         // validate parameters
         if (context == null) {
             return;
         }
 
-        // sessions are automatic on ICS+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            return;
-        }
+        if (FlurryAgent.isSessionActive()) {
+            // sessions are automatic on ICS+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                return;
+            }
 
-        if (mContextMap.get(context) != null) {
-            int refCount = mContextMap.get(context);
-            if (--refCount == 0) {
-                mContextMap.remove(context);
-                FlurryAgent.onEndSession(context);
-            }
-            else {
-                mContextMap.put(context, refCount);
-            }
+            FlurryAgent.onEndSession(context);
         }
+    }
+
+    public synchronized boolean isSessionActive() {
+        return FlurryAgent.isSessionActive();
     }
 }
 
