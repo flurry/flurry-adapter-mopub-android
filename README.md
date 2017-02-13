@@ -67,7 +67,7 @@ for integrating banner and interstitial ads.
             .build();
 
  // Register the FlurryNativeAdRenderer to handle both Flurry video and static native ads
- final FlurryNativeAdRenderer flurryRenderer = new FlurryNatqiveAdRenderer(flurryBinder);
+ final FlurryNativeAdRenderer flurryRenderer = new FlurryNativeAdRenderer(flurryBinder);
  mAdAdapter = new MoPubAdAdapter(getActivity(), adapter);
  mAdAdapter.registerAdRenderer(flurryRenderer);
  
