@@ -1,10 +1,10 @@
 Flurry Android Adapter for MoPub
 =================================
 
-Adapter version 6.2.0 - Updated 2016-03-03
+Adapter version 6.5.0 - Updated 2016-08-29
 ------------------------------------------
 
-This version of the adapter works with MoPub Android SDK 4.1+ and Flurry Android SDK 6.2+. If using older versions of **both**
+This version of the adapter works with MoPub Android SDK 4.8+ and Flurry Android SDK 6.2+. If using older versions of **both**
 the MoPub and Flurry SDK, please refer to [version 5.4.0](https://github.com/flurry/FlurryAdapterForMoPubAndroid/tree/v5.4.0_for_mopub_pre_4.0.0) of the adapter. 
 Otherwise, please upgrade to the newer versions of both SDKs.
 
@@ -15,30 +15,24 @@ Custom Event Class code incorporated into your application in addition to the Fl
 Three quick steps are necessary:
 
 1. Integrate the Flurry SDK and Flurry adapter for MoPub code into your app
-2. Configure Flurry's Ad space(s)
+2. Configure Flurry's Ad unit(s)
 3. Configure MoPub to mediate Flurry
 
 #### Integrate the Flurry SDK and Flurry adapter for MoPub code into your app
 
 1. If your application is not yet using Flurry analytics, create a new application on Flurry's
-dev portal. After logging into https://dev.flurry.com , select the Applications tab and from the
-top righthand corner select Add New Application. In case your application is already tracked
-by Flurry, you can download the latest SDK from the adjacent top righthand
-link.
+dev portal. After logging into https://y.flurry.com, click the **Admin**  tab and go to the **Applications** page. 
+From this page, click the **New App** button to go through the process of adding a new app. Take note of the API key 
+generated for your app, as that would be useful when configuring a new ad unit on MoPub.
 
     ![Screenshot showing download links on Flurry dev portal](imgs/add_project_link.png)
 
-2. Download the [Flurry Android SDK](https://dev.flurry.com/uploadVersionSelectProject.do).
-Record the API Key found on the download page. This will identify your app in the Flurry system.
+2. Add the [Flurry Android SDK](https://developer.yahoo.com/flurry/docs/integrateflurry/android/#install-flurry-android-sdk) to your app.
 
 3. Add the Google Play Services SDK to your project. This is required for Android Advertising ID
 support. See http://developer.android.com/google/playservices/setup.html.
 
-4. Add the jar files from the Flurry SDK (FlurryAnalytics-6.x.x.jar and
-FlurryAds-6.x.x.jar) to your project. Configure the build path of the project to include
-the jar files.
-
-5. Add the Flurry MoPub adapter classes (found in the [com.mopub.mobileads](src/com/mopub/mobileads)
+4. Add the Flurry MoPub adapter classes (found in the [com.mopub.mobileads](src/com/mopub/mobileads)
 & [com.mopub.nativeads](src/com/mopub/nativeads) package) to your project. Place the following
 classes in com.mopub.mobileads:
     * [`FlurryCustomEventBanner`](src/com/mopub/mobileads/FlurryCustomEventBanner.java)
@@ -47,19 +41,40 @@ classes in com.mopub.mobileads:
 
  Place the following classes in the com.mopub.nativeads package:
     * [`FlurryCustomEventNative`](src/com/mopub/nativeads/FlurryCustomEventNative.java)
-    * [`FlurryStaticNativeAd`](src/com/mopub/nativeads/FlurryStaticNativeAd.java)
+    * [`FlurryBaseNativeAd`](src/com/mopub/nativeads/FlurryBaseNativeAd.java)
+    * [`FlurryNativeAdRenderer`](src/com/mopub/nativeads/FlurryNativeAdRenderer.java) <super>1</super>
+    * [`FlurryViewBinder`](src/com/mopub/nativeads/FlurryViewBinder.java) <super>1<super>
 
-6. Follow the [MoPub Custom Event integration steps](https://github.com/mopub/mopub-android-sdk/wiki/Integrating-Third-Party-Ad-Networks)
+5. Follow the [MoPub Custom Event integration steps](https://github.com/mopub/mopub-android-sdk/wiki/Integrating-Third-Party-Ad-Networks)
 for integrating banner and interstitial ads.
 
-7. The steps to integrate Flurry Native Ads via MoPub are similar to those described [here](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration):
+6. The steps to integrate Flurry Native Ads via MoPub are similar to those described [here](https://github.com/mopub/mopub-android-sdk/wiki/Native-Ads-Integration):
     * Create an XML layout for your native ads
     * Define where ads should be placed within your feed
     * Create a MoPubAdAdapter to wrap your existing `Adapter` subclass and begin loading ads.
+ 
+ If using Flurry native video ads <super>1</super>, you should register the `FlurryNativeAdRenderer` as a custom ad renderer and pass in your video view into
+ `FlurryViewBinder`.
 
- The broad range of assets that can be used in the `ViewBinder` are, again, similar to MoPub's.
+ ```java
+ ViewBinder binder = new ViewBinder.Builder(R.layout.native_ad_list_item)
+            // Set up your regular ViewBinder
+            .build();
 
-8. If you plan to run [ProGuard](http://developer.android.com/tools/help/proguard.html) on your app
+ // Configure FlurryViewBinder with your video view
+ FlurryViewBinder flurryBinder = new FlurryViewBinder.Builder(binder)
+            .videoViewId(R.id.native_video_view)
+            .build();
+
+ // Register the FlurryNativeAdRenderer to handle both Flurry video and static native ads
+ final FlurryNativeAdRenderer flurryRenderer = new FlurryNatqiveAdRenderer(flurryBinder);
+ mAdAdapter = new MoPubAdAdapter(getActivity(), adapter);
+ mAdAdapter.registerAdRenderer(flurryRenderer);
+ 
+ //...register other native ad renderers as required
+ ```
+
+7. If you plan to run [ProGuard](http://developer.android.com/tools/help/proguard.html) on your app
 before release, you will need to add the following to your ProGuard configuration file.
 
  ```
@@ -94,24 +109,29 @@ before release, you will need to add the following to your ProGuard configuratio
  -keep class com.google.android.gms.ads.identifier.** {*;}
  ```
 
-#### Configure Flurry Ad space(s)
+<super>1</super> __IMPORTANT__: If you are not using Flurry video ads, you do not need to include the 
+`FlurryNativeAdRenderer` and `FlurryViewBinder` classes into your project. While the `FlurryNativeAdRenderer` can render
+both Flurry video and static native ads, you will have to explicitly include it as a renderer in your code 
+(see step 7 above). If you do not include the classes in your project, the MoPub SDK will use the existing 
+`MoPubStaticNativeAdRenderer` to render Flurry static native ads.
+
+#### Configure Flurry Ad unit(s)
 
 For each MoPub ad unit that you would like to mediate Flurry through, please create a matching ad
-space on Flurry's dev portal ( http://dev.flurry.com ). Log into the developer portal and navigate
-to the **Publishers** tab. On the lefthand navigation bar select **Inventory** and then
-**Ad Spaces**.
+unit on the [Flurry dev portal](https://y.flurry.com). Log into the developer portal and navigate
+to the **App Publishing** tab. On the lefthand navigation bar select **Applications & Ad Units** to 
+view a list of your ad units.
 
-![Screenshot showing ad space navigation on Flurry dev portal](imgs/ad_space_navigation.png)
+![Screenshot showing ad unit navigation on Flurry dev portal](imgs/ad_unit_navigation.png)
 
-With **Ad Spaces** selected you’ll see an index of previously created ad spaces. To set up a new one,
-click on the **New Ad Space** button on the top right. The Ad Space setup screen has four modules.
+To set up a new ad unit, click on the **Ad Unit** button on the top right. 
 
-The Basic Setup section includes fields required to define the name, application, dimensions,
-placement and orientation of the ad space.
+The Basic Setup section includes fields required to define the Ad Unit Name, application,
+placement and/or orientation of the ad unit.
 
-![Screenshot showing ad space navigation on Flurry dev portal](imgs/native_ad_setup.png)
+![Screenshot showing ad unit navigation on Flurry dev portal](imgs/native_ad_setup.png)
 
-The basic setup is all you need for most integrations and you can click the "Save Ad Space" button.
+The basic setup is all you need for most integrations and you can click the "Submit" button.
 
 Please note that mediating Flurry through MoPub requires no additional Flurry-related code.
 The Flurry Advertising code is already incorporated in the com.mopub.mobileads and
@@ -119,12 +139,12 @@ com.mopub.nativeads package (added to your project in the previous step).
 
 #### Configure MoPub to mediate Flurry
 
-Flurry's custom events are implemented in accordance with [instructions provided by MoPub]( https://github.com/mopub/mopub-android-sdk/wiki/Custom-Events).
+Flurry's custom events are implemented in accordance with [instructions provided by MoPub](https://github.com/mopub/mopub-android-sdk/wiki/Custom-Events).
 
 After you incorporate the Flurry files into your project, you need to
 configure Flurry as a Custom Network. Please follow instructions provided by MoPub 
-(for [banner, interstitial](https://dev.twitter.com/mopub/ui-setup/custom-network-setup) or [native](https://dev.twitter.com/mopub/ui-setup/network-setup-custom-native)) 
-with any of the Flurry custom events class noted below:
+(for [banner, interstitial](https://dev.twitter.com/mopub/ui-setup/custom-network-setup) or 
+[native](https://dev.twitter.com/mopub/ui-setup/network-setup-custom-native)) with any of the Flurry custom events class noted below:
 
 * [`com.mopub.mobileads.FlurryCustomEventBanner`](src/com/mopub/mobileads/FlurryCustomEventBanner.java)
  for banner ads
@@ -134,30 +154,32 @@ with any of the Flurry custom events class noted below:
  for Flurry native ads
 
 **NOTE:** An important step to get this integration working is to configure the custom network (as described above) with the
-Flurry API key and Flurry Ad Space and send them as server extras (in the "Custom Event Class Data" field on the MoPub UI).
+Flurry API key and Flurry Ad Unit and send them as server extras (in the "Custom Event Class Data" field on the MoPub UI).
 
 The custom event class data should be in the following JSON format:
 
 ```json
-{"apiKey":"YOUR_API_KEY","adSpaceName":"AdSpaceName"}
+{"apiKey":"YOUR_API_KEY","adSpaceName":"YourAdUnitName"}
 ```
 
 You can also configure the custom event data as a line item in your MoPub order.
 
 ![Screenshot showing ad unit/line item config on MoPub's dashboard](imgs/mopub_line_item_config.png)
 
-
-
-
 For full integration instructions to mediate Flurry through MoPub see
-[here](https://developer.yahoo.com/flurry/docs/publisher/gettingstarted/mediation/mopubmediatesflurry/android/). 
+[here](https://developer.yahoo.com/flurry/docs/publisher/mediation/mopub/android/). 
 For more info on getting started with Flurry for Android, see
-[here](https://developer.yahoo.com/flurry/docs/analytics/gettingstarted/android/)
+[here](https://developer.yahoo.com/flurry/docs/integrateflurry/android/)
 and for more info on monetizing you app through Flurry see
-[here](https://developer.yahoo.com/flurry/docs/publisher/code/android/)
+[here](https://developer.yahoo.com/flurry/docs/publisher/code/android-ad-publishing/)
 
 Changelog
 ---------
+#### Version 6.5.0 - 2016-08-29
+* Added support for Flurry native video ad rendering
+* Supports MoPub SDK 4.8+
+* Bug fixes
+
 #### Version 6.2.0 - 2016-03-03
 * Added Flurry ad branding logo as a MoPub extra
 

@@ -15,24 +15,16 @@ import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 
-public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBanner {
-    public static final String LOG_TAG = FlurryCustomEventBanner.class.getSimpleName();
-
-    private static final String API_KEY = "apiKey";
-    private static final String AD_SPACE_NAME = "adSpaceName";
+class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBanner {
+    private static final String LOG_TAG = FlurryCustomEventBanner.class.getSimpleName();
 
     private Context mContext;
     private CustomEventBannerListener mListener;
     private FrameLayout mLayout;
 
-    private String mApiKey;
     private String mAdSpaceName;
 
     private FlurryAdBanner mBanner;
-
-    public FlurryCustomEventBanner() {
-        super();
-    }
 
     // CustomEventBanner
     @Override
@@ -65,11 +57,10 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
         mListener = listener;
         mLayout = new FrameLayout(context);
 
-        mApiKey = serverExtras.get(API_KEY);
-        mAdSpaceName = serverExtras.get(AD_SPACE_NAME);
+        String apiKey = serverExtras.get(FlurryAgentWrapper.PARAM_API_KEY);
+        mAdSpaceName = serverExtras.get(FlurryAgentWrapper.PARAM_AD_SPACE_NAME);
 
-        // Not needed for Flurry Analytics users
-        FlurryAgentWrapper.getInstance().onStartSession(context, mApiKey);
+        FlurryAgentWrapper.getInstance().startSession(context, apiKey, null);
 
         Log.d(LOG_TAG, "fetch Flurry Ad (" + mAdSpaceName + ") -- " + mLayout.toString());
         mBanner = new FlurryAdBanner(mContext, mLayout, mAdSpaceName);
@@ -90,8 +81,7 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
             mBanner = null;
         }
 
-        // Not needed for Flurry Analytics users
-        FlurryAgentWrapper.getInstance().onEndSession(mContext);
+        FlurryAgentWrapper.getInstance().endSession(mContext);
 
         mContext = null;
         mListener = null;
@@ -99,11 +89,9 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
     }
 
     private boolean extrasAreValid(Map<String, String> serverExtras) {
-        if (serverExtras == null) {
-            return false;
-        }
+        return serverExtras != null && serverExtras.containsKey(FlurryAgentWrapper.PARAM_API_KEY) &&
+                serverExtras.containsKey(FlurryAgentWrapper.PARAM_AD_SPACE_NAME);
 
-        return serverExtras.containsKey(API_KEY) && serverExtras.containsKey(AD_SPACE_NAME);
     }
 
     // FlurryAdListener
@@ -172,8 +160,10 @@ public class FlurryCustomEventBanner extends com.mopub.mobileads.CustomEventBann
         }
 
         @Override
-        public void onError(FlurryAdBanner adBanner, FlurryAdErrorType adErrorType, int errorCode) {
-            Log.d(LOG_TAG, "onError(" + adBanner.toString() + adErrorType.toString() + errorCode + ")");
+        public void onError(FlurryAdBanner adBanner, FlurryAdErrorType adErrorType,
+                            int errorCode) {
+            Log.d(LOG_TAG, "onError(" + adBanner.toString() + adErrorType.toString() +
+                    errorCode + ")");
 
             if (mListener != null) {
                 if (FlurryAdErrorType.FETCH.equals(adErrorType)) {

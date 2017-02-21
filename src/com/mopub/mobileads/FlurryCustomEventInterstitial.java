@@ -14,29 +14,22 @@ import static com.mopub.mobileads.MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_INVALID_STATE;
 import static com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL;
 
-public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEventInterstitial {
-    public static final String LOG_TAG = FlurryCustomEventInterstitial.class.getSimpleName();
-
-    private static final String API_KEY = "apiKey";
-    private static final String AD_SPACE_NAME = "adSpaceName";
+class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEventInterstitial {
+    private static final String LOG_TAG = FlurryCustomEventInterstitial.class.getSimpleName();
 
     private Context mContext;
     private CustomEventInterstitialListener mListener;
 
-    private String mApiKey;
     private String mAdSpaceName;
 
     private FlurryAdInterstitial mInterstitial;
-
-    public FlurryCustomEventInterstitial() {
-        super();
-    }
 
     // CustomEventInterstitial
     @Override
     protected void loadInterstitial(Context context,
                                     CustomEventInterstitialListener listener,
-                                    Map<String, Object> localExtras, Map<String, String> serverExtras) {
+                                    Map<String, Object> localExtras,
+                                    Map<String, String> serverExtras) {
         if (context == null) {
             Log.e(LOG_TAG, "Context cannot be null.");
             listener.onInterstitialFailed(ADAPTER_CONFIGURATION_ERROR);
@@ -62,11 +55,10 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
         mContext = context;
         mListener = listener;
 
-        mApiKey = serverExtras.get(API_KEY);
-        mAdSpaceName = serverExtras.get(AD_SPACE_NAME);
+        String apiKey = serverExtras.get(FlurryAgentWrapper.PARAM_API_KEY);
+        mAdSpaceName = serverExtras.get(FlurryAgentWrapper.PARAM_AD_SPACE_NAME);
 
-        // Not needed for Flurry Analytics users
-        FlurryAgentWrapper.getInstance().onStartSession(context, mApiKey);
+        FlurryAgentWrapper.getInstance().startSession(context, apiKey, null);
 
         Log.d(LOG_TAG, "fetch Flurry ad (" + mAdSpaceName + ")");
         mInterstitial = new FlurryAdInterstitial(mContext, mAdSpaceName);
@@ -87,19 +79,15 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
             mInterstitial = null;
         }
 
-        // Not needed for Flurry Analytics users
-        FlurryAgentWrapper.getInstance().onEndSession(mContext);
+        FlurryAgentWrapper.getInstance().endSession(mContext);
 
         mContext = null;
         mListener = null;
     }
 
     private boolean extrasAreValid(Map<String, String> serverExtras) {
-        if (serverExtras == null) {
-            return false;
-        }
-
-        return serverExtras.containsKey(API_KEY) && serverExtras.containsKey(AD_SPACE_NAME);
+        return serverExtras != null && serverExtras.containsKey(FlurryAgentWrapper.PARAM_API_KEY) &&
+                serverExtras.containsKey(FlurryAgentWrapper.PARAM_AD_SPACE_NAME);
     }
 
     @Override
@@ -175,8 +163,10 @@ public class FlurryCustomEventInterstitial extends com.mopub.mobileads.CustomEve
         }
 
         @Override
-        public void onError(FlurryAdInterstitial adBanner, FlurryAdErrorType adErrorType, int errorCode) {
-            Log.d(LOG_TAG, "onError(" + adBanner.toString() + adErrorType.toString() + errorCode + ")");
+        public void onError(FlurryAdInterstitial adBanner, FlurryAdErrorType adErrorType,
+                            int errorCode) {
+            Log.d(LOG_TAG, "onError(" + adBanner.toString() + adErrorType.toString() +
+                    errorCode + ")");
 
             if (mListener != null) {
                 if (FlurryAdErrorType.FETCH.equals(adErrorType)) {
