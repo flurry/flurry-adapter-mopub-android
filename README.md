@@ -1,8 +1,12 @@
-Flurry Android Adapter for MoPub
-=================================
+[Archived] Flurry Android Adapter for MoPub
+===========================================
 
 Adapter version 6.5.0 - Updated 2016-08-29
-------------------------------------------
+-------------------------------------------------------
+
+**NOTE**: Future updates to this adapter will no longer be provided here. The adapter will now be maintained as part of the 
+[MoPub SDK](https://github.com/mopub/mopub-android-sdk) and latest versions can be obtained from there. To raise an issue regarding the adapter, 
+please contact support@flurry.com.
 
 This version of the adapter works with MoPub Android SDK 4.8+ and Flurry Android SDK 6.2+. If using older versions of **both**
 the MoPub and Flurry SDK, please refer to [version 5.4.0](https://github.com/flurry/FlurryAdapterForMoPubAndroid/tree/v5.4.0_for_mopub_pre_4.0.0) of the adapter. 
@@ -38,12 +42,13 @@ classes in com.mopub.mobileads:
     * [`FlurryCustomEventBanner`](src/com/mopub/mobileads/FlurryCustomEventBanner.java)
     * [`FlurryCustomEventInterstitial`](src/com/mopub/mobileads/FlurryCustomEventInterstitial.java)
     * [`FlurryAgentWrapper`](src/com/mopub/mobileads/FlurryAgentWrapper.java)
+    
+    Place the following classes in the com.mopub.nativeads package:
 
- Place the following classes in the com.mopub.nativeads package:
     * [`FlurryCustomEventNative`](src/com/mopub/nativeads/FlurryCustomEventNative.java)
     * [`FlurryBaseNativeAd`](src/com/mopub/nativeads/FlurryBaseNativeAd.java)
-    * [`FlurryNativeAdRenderer`](src/com/mopub/nativeads/FlurryNativeAdRenderer.java) <super>1</super>
-    * [`FlurryViewBinder`](src/com/mopub/nativeads/FlurryViewBinder.java) <super>1<super>
+    * [`FlurryNativeAdRenderer`](src/com/mopub/nativeads/FlurryNativeAdRenderer.java) <sup>1</sup>
+    * [`FlurryViewBinder`](src/com/mopub/nativeads/FlurryViewBinder.java) <sup>1</sup>
 
 5. Follow the [MoPub Custom Event integration steps](https://github.com/mopub/mopub-android-sdk/wiki/Integrating-Third-Party-Ad-Networks)
 for integrating banner and interstitial ads.
@@ -53,7 +58,7 @@ for integrating banner and interstitial ads.
     * Define where ads should be placed within your feed
     * Create a MoPubAdAdapter to wrap your existing `Adapter` subclass and begin loading ads.
  
- If using Flurry native video ads <super>1</super>, you should register the `FlurryNativeAdRenderer` as a custom ad renderer and pass in your video view into
+ If using Flurry native video ads <sup>1</sup>, you should register the `FlurryNativeAdRenderer` as a custom ad renderer and pass in your video view into
  `FlurryViewBinder`.
 
  ```java
@@ -109,7 +114,7 @@ before release, you will need to add the following to your ProGuard configuratio
  -keep class com.google.android.gms.ads.identifier.** {*;}
  ```
 
-<super>1</super> __IMPORTANT__: If you are not using Flurry video ads, you do not need to include the 
+<sup>1</sup> __IMPORTANT__: If you are not using Flurry video ads, you do not need to include the 
 `FlurryNativeAdRenderer` and `FlurryViewBinder` classes into your project. While the `FlurryNativeAdRenderer` can render
 both Flurry video and static native ads, you will have to explicitly include it as a renderer in your code 
 (see step 7 above). If you do not include the classes in your project, the MoPub SDK will use the existing 
